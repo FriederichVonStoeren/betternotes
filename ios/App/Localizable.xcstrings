@@ -1,0 +1,26 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "betternotes" : {
+      "shouldTranslate" : false
+    },
+    "install.ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation hat funktioniert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The install worked."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
