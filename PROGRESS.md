@@ -18,6 +18,8 @@ Next after the report: milestone (c).
 
 ## Waiting for the owner
 
+All steps and questions in one place: `docs/OWNER_TODO.md`.
+
 1. Install test: follow `docs/SIDESTORE.md`, report the checklist at its end.
 2. Drawing test: `docs/CHECKPOINT_B.md`, report the checklist at its end.
 3. OneDrive test: `docs/MICROSOFT_APP.md`, send the copied report.
