@@ -8,6 +8,8 @@ Open file format, sync to your own cloud, no account, no telemetry, no subscript
 ## Documents
 
 - [docs/SIDESTORE.md](docs/SIDESTORE.md): install the iPad app without a Mac
+- [docs/CHECKPOINT_B.md](docs/CHECKPOINT_B.md): how to test the current drawing build
+- [docs/MICROSOFT_APP.md](docs/MICROSOFT_APP.md): register the app with Microsoft and run the OneDrive test
 - [docs/SCOPE.md](docs/SCOPE.md): what is being built
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how it is built
 - [docs/DECISIONS.md](docs/DECISIONS.md): why

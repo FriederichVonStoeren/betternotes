@@ -55,3 +55,17 @@ The repo is public; the repo-local git identity is the owner's GitHub noreply e-
 ## D12. First install of SideStore from Fedora uses iloader
 iloader (github.com/nab138/iloader) ships an RPM, installs SideStore and places the pairing
 file. Checked 2026-11: v2.4.1, actively maintained.
+
+## D13. The latency spike has three modes, including a hybrid
+PencilKit (reference), the custom engine, and hybrid (PencilKit draws while the pencil is
+down, our renderer replaces the stroke at lift-off). Hybrid is the fallback if the custom
+engine feels clearly worse; the spike shows whether its jump at lift-off is acceptable.
+
+## D14. GitHub Pages is deployed by a workflow, not from a branch
+The `pages` CI job builds the site from `site/`, `spikes/` and `schema/` and generates the
+SideStore source `apps.json` from the releases. Nothing generated is committed.
+
+## D15. The OneDrive spike is a single static page
+`spikes/onedrive/` does PKCE by hand against the `common` endpoint with
+`Files.ReadWrite.AppFolder`, so the owner can test a school account in a browser months
+before sync is built. Tokens stay in memory; only the public client ID is kept in localStorage.

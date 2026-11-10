@@ -4,20 +4,23 @@ Last updated: 2026-11-10
 
 ## Now
 
-Milestone (b): drawing app with the three-way latency spike, UI screenshot tests,
-OneDrive registration spike, SideStore source. Ends in a CHECKPOINT (owner tests drawing feel).
+CHECKPOINT (b): waiting for the owner to test the drawing feel (`docs/CHECKPOINT_B.md`),
+the install (`docs/SIDESTORE.md`) and the OneDrive login (`docs/MICROSOFT_APP.md`).
+Next after the report: milestone (c).
 
 ## Milestone status
 
 | | Content | Status |
 |---|---|---|
 | a | Rules files, empty-app .ipa in CI, FORMAT.md + schema + fixtures, Swift and TypeScript packages, cross-language tests | done, tagged v0.1 (14 Swift tests, 11 TypeScript tests, each implementation reads the other's output in CI) |
-| b | Drawing app + three-way latency spike + UI screenshot tests + OneDrive registration spike. CHECKPOINT | in progress |
+| b | Drawing app + three-way latency spike + UI screenshot tests + OneDrive registration spike. CHECKPOINT | built, tagged v0.2; CI screenshots show all three modes drawing. Waiting for the device test |
 | c to m | see `docs/SCOPE.md` | todo |
 
 ## Waiting for the owner
 
 1. Install test: follow `docs/SIDESTORE.md`, report the checklist at its end.
+2. Drawing test: `docs/CHECKPOINT_B.md`, report the checklist at its end.
+3. OneDrive test: `docs/MICROSOFT_APP.md`, send the copied report.
 
 (Secret scanning and push protection were checked on 2026-11-10: both already enabled.)
 
@@ -30,9 +33,9 @@ OneDrive registration spike, SideStore source. Ends in a CHECKPOINT (owner tests
 
 ## Deferred, with the milestone that picks it up
 
-- SideStore source (`apps.json` on GitHub Pages): b, together with the Pages setup.
-- App icon: f.
-- Version number from the git tag instead of the fixed value in `ios/project.yml`: b.
+- Final app icon: f (a placeholder exists).
+
+Done early: SideStore source (`apps.json` on GitHub Pages), version number from the git tag.
 
 ## Owner's answers so far
 
