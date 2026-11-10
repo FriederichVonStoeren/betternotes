@@ -29,13 +29,13 @@ final class ScreenshotTests: XCTestCase {
 
     func testDrawInEveryMode() {
         let app = launch(language: "en")
-        for mode in ["PencilKit", "Custom", "Hybrid"] {
+        // PencilKit keeps its strokes to itself; Custom and Hybrid each add two to our engine.
+        for (mode, strokes) in [("PencilKit", 0), ("Custom", 2), ("Hybrid", 4)] {
             app.segmentedControls.buttons[mode].tap()
             draw(in: app)
             keepScreenshot("en-\(mode)")
+            XCTAssertTrue(app.staticTexts["hud"].label.contains("\(strokes) strokes"), "\(mode): \(app.staticTexts["hud"].label)")
         }
-        // Hybrid hands every stroke to the custom engine, so the count in the footer goes up.
-        XCTAssertFalse(app.staticTexts["hud"].label.contains("0 strokes"))
         app.buttons["clear"].tap()
         XCTAssertTrue(app.staticTexts["hud"].label.contains("0 strokes"))
         keepScreenshot("en-cleared")
@@ -45,6 +45,7 @@ final class ScreenshotTests: XCTestCase {
         let app = launch(language: "de")
         XCTAssertTrue(app.segmentedControls.buttons["Eigene Engine"].exists)
         draw(in: app)
+        XCTAssertTrue(app.staticTexts["hud"].label.contains("2 Striche"), app.staticTexts["hud"].label)
         keepScreenshot("de-Custom")
     }
 }

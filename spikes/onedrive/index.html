@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>betternotes: OneDrive test</title>
+<style>
+  :root { color-scheme: light dark; --bg: #fff; --fg: #222; --dim: #666; --line: #ddd; --ok: #1a7f37; --bad: #c62828; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1e1e1e; --fg: #dcddde; --dim: #999; --line: #3a3a3a; --ok: #56d364; --bad: #ff7b72; } }
+  body { background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; max-width: 44rem; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.3rem; }
+  input { font: inherit; width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: inherit; }
+  button { font: inherit; padding: 8px 16px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; margin: 12px 8px 0 0; }
+  button:disabled { opacity: .5; cursor: default; }
+  ol { padding-left: 1.4rem; }
+  li { margin: 6px 0; overflow-wrap: anywhere; }
+  .ok::marker { color: var(--ok); } .ok b { color: var(--ok); }
+  .bad b { color: var(--bad); }
+  small, .dim { color: var(--dim); }
+  textarea { width: 100%; box-sizing: border-box; height: 12rem; font: 13px/1.4 ui-monospace, monospace; background: transparent; color: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+</style>
+</head>
+<body>
+<h1>betternotes: OneDrive test</h1>
+<p>This page checks whether betternotes can sync with <em>your</em> OneDrive account. It signs
+you in at Microsoft, creates one small test file in the folder <code>Apps/betternotes</code>,
+and deletes it again. It cannot see any other file. Nothing is sent anywhere except to Microsoft.</p>
+
+<label for="client">Application (client) ID <small>(from docs/MICROSOFT_APP.md, step 3)</small></label>
+<input id="client" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" spellcheck="false">
+<button id="go">Sign in and run the test</button>
+<p class="dim" id="redirect"></p>
+
+<ol id="steps"></ol>
+<div id="reportBox" hidden>
+  <p>Copy this report and send it back. It contains no password and no token.</p>
+  <textarea id="report" readonly></textarea>
+  <button id="copy">Copy report</button>
+</div>
+
+<script>
+// Feasibility spike for milestone (g): OAuth 2.0 with PKCE done by hand (no MSAL), the
+// app-folder scope, conditional upload with If-Match, delta query, token refresh.
+// Tokens stay in memory and are never shown or stored.
+"use strict";
+const AUTH = "https://login.microsoftonline.com/common/oauth2/v2.0";
+const GRAPH = "https://graph.microsoft.com/v1.0";
+const SCOPE = "Files.ReadWrite.AppFolder offline_access";
+const redirectUri = location.origin + location.pathname;
+const $ = (id) => document.getElementById(id);
+const lines = [];
+
+$("client").value = localStorage.getItem("bn.spike.client") ?? "";
+$("redirect").textContent = "Redirect URI to register: " + redirectUri;
+
+function note(ok, title, detail) {
+  const li = document.createElement("li");
+  li.className = ok ? "ok" : "bad";
+  const b = document.createElement("b");
+  b.textContent = (ok ? "OK" : "FAILED") + ": " + title;
+  li.append(b, detail ? " " + detail : "");
+  $("steps").append(li);
+  lines.push((ok ? "OK      " : "FAILED  ") + title + (detail ? " | " + detail : ""));
+  $("report").value = lines.join("\n");
+  $("reportBox").hidden = false;
+}
+
+const base64url = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const random = () => base64url(crypto.getRandomValues(new Uint8Array(32)));
+
+async function signIn() {
+  const client = $("client").value.trim();
+  if (!/^[0-9a-f-]{36}$/i.test(client)) return alert("Paste the Application (client) ID first.");
+  localStorage.setItem("bn.spike.client", client);
+  const verifier = random(), state = random();
+  sessionStorage.setItem("bn.spike.verifier", verifier);
+  sessionStorage.setItem("bn.spike.state", state);
+  const challenge = base64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+  location.assign(AUTH + "/authorize?" + new URLSearchParams({
+    client_id: client, response_type: "code", redirect_uri: redirectUri, response_mode: "query",
+    scope: SCOPE, state, code_challenge: challenge, code_challenge_method: "S256", prompt: "select_account",
+  }));
+}
+
+async function token(params) {
+  const response = await fetch(AUTH + "/token", {
+    method: "POST",
+    body: new URLSearchParams({ client_id: localStorage.getItem("bn.spike.client"), ...params }),
+  });
+  const body = await response.json();
+  if (!response.ok) throw new Error(`${body.error}: ${(body.error_description ?? "").split("\n")[0]}`);
+  return body;
+}
+
+async function graph(accessToken, method, path, { headers = {}, body } = {}) {
+  const response = await fetch(path.startsWith("https://") ? path : GRAPH + path, {
+    method, body, headers: { Authorization: "Bearer " + accessToken, ...headers },
+  });
+  const text = await response.text();
+  let json = null;
+  try { json = text ? JSON.parse(text) : null; } catch { /* not JSON */ }
+  return { status: response.status, ok: response.ok, json, error: json?.error ? `${json.error.code}: ${json.error.message}` : "" };
+}
+
+async function step(title, run) {
+  try {
+    note(true, title, await run());
+    return true;
+  } catch (e) {
+    note(false, title, e.message);
+    return false;
+  }
+}
+
+function expect(r, status) {
+  if (r.status !== status) throw new Error(`HTTP ${r.status} (expected ${status}) ${r.error}`);
+}
+
+async function runTests(code) {
+  let tokens;
+  if (!await step("Sign-in (authorization code + PKCE, no client secret)", async () => {
+    tokens = await token({
+      grant_type: "authorization_code", code, redirect_uri: redirectUri,
+      code_verifier: sessionStorage.getItem("bn.spike.verifier"),
+    });
+    return `granted scopes: ${tokens.scope}; refresh token: ${tokens.refresh_token ? "yes" : "no"}; access token valid ${tokens.expires_in}s`;
+  })) return;
+  const at = () => tokens.access_token;
+  const file = "/me/drive/special/approot:/betternotes-sync-test.json:";
+  let etag1, etag2;
+
+  if (!await step("App folder exists or is created", async () => {
+    const r = await graph(at(), "GET", "/me/drive/special/approot");
+    expect(r, 200);
+    const drive = await graph(at(), "GET", "/me/drive?$select=driveType");
+    return `folder "${r.json.name}", account type: ${drive.json?.driveType ?? "unknown (" + drive.status + ")"}`;
+  })) return;
+
+  await step("Upload a new file", async () => {
+    const r = await graph(at(), "PUT", file + "/content", { body: '{"v":1}', headers: { "Content-Type": "application/json" } });
+    if (r.status !== 200 && r.status !== 201) throw new Error(`HTTP ${r.status} ${r.error}`);
+    etag1 = r.json.eTag;
+    return `HTTP ${r.status}, eTag ${etag1 ? "present" : "MISSING"}`;
+  });
+
+  await step("Update only if unchanged (If-Match with the current eTag)", async () => {
+    const r = await graph(at(), "PUT", file + "/content", { body: '{"v":2}', headers: { "Content-Type": "application/json", "If-Match": etag1 } });
+    expect(r, 200);
+    etag2 = r.json.eTag;
+    return `eTag changed: ${etag2 !== etag1}`;
+  });
+
+  await step("An outdated copy is refused (If-Match with the old eTag gives 412)", async () => {
+    const r = await graph(at(), "PUT", file + "/content", { body: '{"v":3}', headers: { "Content-Type": "application/json", "If-Match": etag1 } });
+    expect(r, 412);
+    return "no silent overwrite";
+  });
+
+  await step("Delta query on the app folder", async () => {
+    let r = await graph(at(), "GET", "/me/drive/special/approot/delta");
+    expect(r, 200);
+    let count = r.json.value.length, pages = 1;
+    while (r.json["@odata.nextLink"] && pages < 20) {
+      r = await graph(at(), "GET", r.json["@odata.nextLink"]);
+      expect(r, 200);
+      count += r.json.value.length;
+      pages++;
+    }
+    const link = r.json["@odata.deltaLink"];
+    if (!link) throw new Error("no deltaLink returned");
+    const again = await graph(at(), "GET", link);
+    expect(again, 200);
+    return `${count} item(s) in ${pages} page(s); second call with the delta link returned ${again.json.value.length} change(s)`;
+  });
+
+  await step("Token refresh without signing in again", async () => {
+    if (!tokens.refresh_token) throw new Error("no refresh token was issued");
+    tokens = await token({ grant_type: "refresh_token", refresh_token: tokens.refresh_token, scope: SCOPE });
+    const r = await graph(at(), "GET", "/me/drive/special/approot?$select=id");
+    expect(r, 200);
+    return "new access token works";
+  });
+
+  await step("Delete the test file", async () => {
+    const r = await graph(at(), "DELETE", file);
+    expect(r, 204);
+    return "";
+  });
+  lines.push("", "Browser: " + navigator.userAgent);
+  $("report").value = lines.join("\n");
+}
+
+$("go").onclick = signIn;
+$("copy").onclick = () => navigator.clipboard.writeText($("report").value);
+
+// Back from Microsoft?
+const query = new URLSearchParams(location.search);
+if (query.has("code") || query.has("error")) {
+  history.replaceState(null, "", location.pathname); // take the one-time code out of the address bar
+  if (query.has("error")) {
+    note(false, "Sign-in", `${query.get("error")}: ${(query.get("error_description") ?? "").split("\n")[0]}`);
+  } else if (query.get("state") !== sessionStorage.getItem("bn.spike.state")) {
+    note(false, "Sign-in", "state mismatch; press the button again");
+  } else {
+    $("go").disabled = true;
+    runTests(query.get("code")).finally(() => { $("go").disabled = false; });
+  }
+}
+</script>
+</body>
+</html>

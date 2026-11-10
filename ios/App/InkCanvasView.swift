@@ -21,6 +21,8 @@ final class InkCanvasView: UIView {
     var onMetrics: ((_ age: TimeInterval, _ work: TimeInterval, _ samples: Int) -> Void)?
     /// The touch that is drawing, for showing pressure, tilt and roll.
     var onTouch: ((UITouch) -> Void)?
+    /// A stroke was added or everything was cleared.
+    var onChange: (() -> Void)?
 
     private static let chunkSize = 48
 
@@ -56,6 +58,7 @@ final class InkCanvasView: UIView {
         guard !stroke.isEmpty else { return }
         committed.append(stroke)
         bake([stroke], onto: committedImage)
+        onChange?()
     }
 
     func clear() {
@@ -63,6 +66,7 @@ final class InkCanvasView: UIView {
         committedImage = nil
         committedLayer.contents = nil
         resetLive()
+        onChange?()
     }
 
     override func layoutSubviews() {
@@ -88,8 +92,8 @@ final class InkCanvasView: UIView {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard activeTouch == nil, let touch = touches.first(where: accepts) else { return }
+        resetLive() // also forgets the active touch, so it comes first
         activeTouch = touch
-        resetLive()
         let color = inkColor.resolvedColor(with: traitCollection).cgColor
         liveLayer.fillColor = color
         predictedLayer.fillColor = color

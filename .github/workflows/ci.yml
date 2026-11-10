@@ -161,3 +161,32 @@ jobs:
         with:
           name: ui-screenshots
           path: screenshots
+
+  pages:
+    name: Website (GitHub Pages)
+    if: github.event_name == 'push'
+    needs: ios # on a tag the release must exist before apps.json is built
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    concurrency: pages
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p _site
+          cp -r site/. _site/
+          cp -r spikes schema _site/
+          SITE="https://$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]').github.io/${GITHUB_REPOSITORY#*/}"
+          gh api "repos/$GITHUB_REPOSITORY/releases" | node scripts/make-source.mjs "$GITHUB_REPOSITORY" "$SITE" > _site/apps.json
+          cat _site/apps.json
+      - uses: actions/upload-pages-artifact@v3
+      - id: deploy
+        uses: actions/deploy-pages@v4

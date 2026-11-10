@@ -44,6 +44,7 @@ final class SpikeViewController: UIViewController, PKCanvasViewDelegate, UIPenci
 
         ink.onMetrics = { [weak self] age, work, count in self?.record(age: age, work: work, count: count) }
         ink.onTouch = { [weak self] touch in self?.record(touch) }
+        ink.onChange = { [weak self] in self?.refreshHUD() }
 
         modes.selectedSegmentIndex = 1
         modes.addTarget(self, action: #selector(applySettings), for: .valueChanged)
@@ -102,7 +103,6 @@ final class SpikeViewController: UIViewController, PKCanvasViewDelegate, UIPenci
     private func clearAll() {
         ink.clear()
         pencilKit.drawing = PKDrawing()
-        refreshHUD()
     }
 
     // MARK: Hybrid mode
@@ -114,7 +114,6 @@ final class SpikeViewController: UIViewController, PKCanvasViewDelegate, UIPenci
         }
         ink.add(stroke: converted)
         canvasView.drawing = PKDrawing() // calls this method again; the guard above ends it
-        refreshHUD()
     }
 
     // MARK: What the Pencil reports
