@@ -10,6 +10,25 @@ permissions:
   contents: read
 
 jobs:
+  format-ts:
+    name: Format (TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test, and write every valid fixture for the Swift tests
+        working-directory: packages/format-ts
+        run: |
+          npm ci
+          BN_OUT_DIR="$RUNNER_TEMP/ts-written" npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ts-written
+          path: ${{ runner.temp }}/ts-written
+          if-no-files-found: error
+
   ios:
     name: iPad app (.ipa)
     runs-on: macos-26

@@ -1,0 +1,26 @@
+{
+ "format": "betternotes.notebook",
+ "formatVersion": "1.7",
+ "created": "2026-11-10T12:00:00Z",
+ "modified": "2026-11-10T12:30:00Z",
+ "id": "nb-future",
+ "title": "From the future",
+ "chapters": [
+  {
+   "id": "c1",
+   "title": "One",
+   "order": 1,
+   "icon": "star",
+   "color": "#ff0000"
+  }
+ ],
+ "futureNotebookField": {
+  "nested": [
+   1,
+   2.5,
+   null,
+   true,
+   "x"
+  ]
+ }
+}

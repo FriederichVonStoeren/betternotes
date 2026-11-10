@@ -1,0 +1,33 @@
+{
+ "format": "betternotes.page",
+ "formatVersion": "1.0",
+ "created": "2026-11-10T12:00:00Z",
+ "modified": "2026-11-10T12:30:00Z",
+ "id": "p",
+ "chapter": null,
+ "order": 1,
+ "size": {
+  "w": 59528,
+  "h": 84189
+ },
+ "layers": [
+  {
+   "id": "l1",
+   "name": "l1",
+   "visible": true,
+   "locked": false,
+   "objects": [
+    {
+     "id": "b",
+     "type": "pdf",
+     "asset": "e5a636ac00ea3c175d3193c5d05df60ded156dd466043c70d254507ec277e4c2.pdf",
+     "page": 0,
+     "x": 0,
+     "y": 0,
+     "w": 1,
+     "h": 1
+    }
+   ]
+  }
+ ]
+}

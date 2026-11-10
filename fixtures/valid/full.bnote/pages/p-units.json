@@ -1,0 +1,29 @@
+{
+ "format": "betternotes.page",
+ "formatVersion": "1.0",
+ "created": "2026-11-10T12:00:00Z",
+ "modified": "2026-11-10T12:30:00Z",
+ "id": "p-units",
+ "chapter": "ch-mechanics",
+ "order": 2048,
+ "title": "Einheiten",
+ "size": {
+  "w": 84189,
+  "h": 59528
+ },
+ "mirror": {
+  "mode": "radial",
+  "cx": 42094,
+  "cy": 29764,
+  "count": 6
+ },
+ "layers": [
+  {
+   "id": "l1",
+   "name": "l1",
+   "visible": true,
+   "locked": false,
+   "objects": []
+  }
+ ]
+}
