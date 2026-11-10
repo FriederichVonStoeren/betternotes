@@ -62,7 +62,8 @@ public enum Format {
     }
 
     public static func timestamp(_ date: Date = Date()) -> String {
-        ISO8601DateFormatter().string(from: date)
+        // whole seconds, cut off (not rounded), like the TypeScript implementation
+        ISO8601DateFormatter().string(from: Date(timeIntervalSince1970: date.timeIntervalSince1970.rounded(.down)))
     }
 
     // MARK: Ordering of chapters and pages (FORMAT.md, "Ordering")

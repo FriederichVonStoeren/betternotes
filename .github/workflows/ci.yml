@@ -29,6 +29,46 @@ jobs:
           path: ${{ runner.temp }}/ts-written
           if-no-files-found: error
 
+  core:
+    name: Core (Swift)
+    runs-on: macos-26
+    needs: format-ts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ts-written
+          path: ${{ runner.temp }}/ts-written
+      - name: Test, read the TypeScript output, write every valid fixture for the TypeScript tests
+        working-directory: core
+        env:
+          BN_FOREIGN_DIR: ${{ runner.temp }}/ts-written
+          BN_OUT_DIR: ${{ runner.temp }}/swift-written
+        run: swift test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swift-written
+          path: ${{ runner.temp }}/swift-written
+          if-no-files-found: error
+
+  format-cross:
+    name: Format (TypeScript reads Swift output)
+    runs-on: ubuntu-latest
+    needs: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: swift-written
+          path: ${{ runner.temp }}/swift-written
+      - working-directory: packages/format-ts
+        run: |
+          npm ci
+          BN_FOREIGN_DIR="$RUNNER_TEMP/swift-written" npm test
+
   ios:
     name: iPad app (.ipa)
     runs-on: macos-26
