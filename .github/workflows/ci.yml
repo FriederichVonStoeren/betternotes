@@ -5,6 +5,7 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
+  workflow_dispatch: # after tagging: `gh workflow run ci.yml --ref main` refreshes apps.json
 
 permissions:
   contents: read
@@ -164,8 +165,9 @@ jobs:
 
   pages:
     name: Website (GitHub Pages)
-    if: github.event_name == 'push'
-    needs: ios # on a tag the release must exist before apps.json is built
+    # The github-pages environment only accepts main; apps.json is built from the releases.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: ios
     runs-on: ubuntu-latest
     permissions:
       contents: read

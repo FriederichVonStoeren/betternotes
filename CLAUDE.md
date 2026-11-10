@@ -49,6 +49,7 @@ maintain with Claude Code. Plain language in docs.
 - After each push: `gh run watch` (or `gh run view --log-failed`). If CI fails, fix it before
   moving on. Download the UI-test screenshots artifact and look at it.
 - Tag each finished milestone (`v0.1`, `v0.2`, ...). The tag makes CI publish a GitHub Release.
+  Then run `gh workflow run ci.yml --ref main` so the SideStore source lists the new release.
 - Continue through milestones without asking while CI is green. Stop only at CHECKPOINTS
   (owner must test on a device) or when blocked; batch questions into one numbered list.
 - At a checkpoint: say exactly how to test, with a done / not-done list.
