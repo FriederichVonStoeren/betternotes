@@ -88,6 +88,9 @@ jobs:
         working-directory: ios
         run: |
           set -o pipefail
+          # A tag v1.2 gives version 1.2; other builds keep the version from project.yml.
+          VERSION=()
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VERSION=("MARKETING_VERSION=${GITHUB_REF_NAME#v}"); fi
           xcodebuild build \
             -project BetterNotes.xcodeproj \
             -scheme BetterNotes \
@@ -95,6 +98,7 @@ jobs:
             -destination 'generic/platform=iOS' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" "${VERSION[@]}" \
             | tail -n 200
 
       - name: Package .ipa
@@ -119,3 +123,41 @@ jobs:
           gh release create "$GITHUB_REF_NAME" ios/betternotes.ipa \
             --title "$GITHUB_REF_NAME" --generate-notes \
             ${{ startsWith(github.ref_name, 'v0.0.') && '--prerelease' || '' }}
+
+  ui-tests:
+    name: UI screenshots (simulator)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install xcodegen
+          xcodegen generate
+
+      - name: Run UI tests on an iPad simulator
+        working-directory: ios
+        run: |
+          set -o pipefail
+          DEVICES=$(xcrun simctl list devices available)
+          UDID=$(echo "$DEVICES" | grep "iPad Air 11-inch" | head -n 1 | grep -oE "[0-9A-F-]{36}" || true)
+          if [ -z "$UDID" ]; then UDID=$(echo "$DEVICES" | grep "iPad" | head -n 1 | grep -oE "[0-9A-F-]{36}"); fi
+          echo "$DEVICES" | grep "$UDID"
+          xcodebuild test \
+            -project BetterNotes.xcodeproj \
+            -scheme BetterNotes \
+            -destination "id=$UDID" \
+            -derivedDataPath build \
+            -resultBundlePath ui.xcresult \
+            | tail -n 200
+
+      - name: Export screenshots
+        if: always()
+        run: xcrun xcresulttool export attachments --path ios/ui.xcresult --output-path screenshots
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-screenshots
+          path: screenshots
