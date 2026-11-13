@@ -36,6 +36,7 @@ All steps and questions in one place: `docs/OWNER_TODO.md`.
 ## Deferred, with the milestone that picks it up
 
 - Final app icon: f (a placeholder exists).
+- Selection option `multilayerselection` (current layer / selected layers / all layers): picked up with the selector and layers work in c. Noted 2026-11-13, no code yet.
 
 Done early: SideStore source (`apps.json` on GitHub Pages), version number from the git tag.
 

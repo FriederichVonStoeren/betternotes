@@ -20,6 +20,8 @@ Device: iPad Air 11" with Apple Pencil Pro, latest iPadOS.
   snapping, grid/guides, align/distribute, hold-to-perfect and auto-recognition (can be disabled).
 - **Layers** per page: show/hide, lock, reorder, rename, opacity, "move selection to layer".
   A PDF background is a locked base layer.
+- **Layer scope for selection** (option, "multilayerselection"): what the selector may pick.
+  Three values: only the current layer, only the selected layers, or all layers.
 - **Mirror mode**: strokes mirrored live across an axis (vertical, horizontal, both, optional
   radial), toggled per page.
 - **PDF** import and annotation, export with annotations baked in.
